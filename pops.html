@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Chat</title>
+  <style>
+
+    body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 10px;
+  overflow-y: auto; /* Enables vertical scrolling */
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  scrollbar-width: thin; /* Firefox-specific */
+  scrollbar-color: #007bff #eaeaea; /* Firefox-specific */
+  transition: background-color 0.3s ease;
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 10px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.message {
+  margin: 5px 0;
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 70%;
+  word-wrap: break-word;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.message:hover {
+  transform: scale(1.02);
+}
+
+.message.sent {
+  background-color: #007bff;
+  color: #fff;
+  align-self: flex-end;
+}
+
+.message.received {
+  background-color: #eaeaea;
+  color: #000;
+  align-self: flex-start;
+}
+
+.input-container {
+  display: flex;
+  padding: 10px;
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+}
+
+.input-container input {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  margin-right: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-container input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  outline: none;
+}
+
+.input-container button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 20px;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.input-container button:hover {
+  background-color: #0056b3;
+}
+
+/*time*/
+.welcome-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+  text-align: center;
+  font-family: 'Poppins', sans-serif; /* Custom font style */
+}
+.delete-button {
+  margin-left: 10px;
+  background-color: transparent;
+  color: #ff4d4d;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.2s;
+}
+
+.delete-button:hover {
+  color: #cc0000; /* Darker red on hover */
+}
+
+#settingsContainer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+#settingsButton {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+#settingsButton:hover {
+    background-color: #0056b3;
+}
+
+#settingsMenu {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    position: absolute;
+    top: 40px;
+    right: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 10px;
+}
+
+#settingsMenu button {
+    display: block;
+    width: 100px;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+}
+
+#settingsMenu button:hover {
+    background-color: #f0f0f0;
+}
+
+
+
+      </style>
+      <link rel="icon" href="artificial-intelligence.png">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+      <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+    </head>
+<body id="body">
+  <div id="welcomeMessage" class="welcome-message">
+    Welcome to Aasim AI
+  </div>
+
+  <div class="chat-container" id="chatContainer">
+    <!-- Messages will appear here -->
+  </div>
+  <div class="input-container" id="inputcontainer">
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button id="sendButton">Send</button>
+    <audio id="vibe" src="vibe.mp4"></audio>
+    <audio id="love" src="love sooung.mp4"></audio>
+    <audio id="break" src="brak up soung.mp4"></audio>
+    <script>
+      // JavaScript function to speak with a slower rate
+      var text = "Welcome to Aasim AI";
+      responsiveVoice.speak(text, "UK English Female", { rate: 0.8 });
+  </script>
+  </div>  
+
+  <div id="settingsContainer">
+    <button id="settingsButton">⚙️</button>
+    <div id="settingsMenu" style="display: none;">
+        <button id="closeMenu" style="float: right;"> <center>X</center> </button>
+        <button id="toggleDarkMode">Toggle Dark/Light Mode</button>
+        <button id="showTimeDate">Show Time & Date</button>
+        <button id="clearHistory">Clear Chat History</button>
+        <button id="loginSettings" >Login Settings</button> <!-- New Login Settings button -->
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Login Settings Modal -->
+<div id="loginSettingsModal" style="display:none;">
+<h2>Login Settings</h2>
+<form id="loginSettingsForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" value="currentUsername" required><br><br>
+
+    <label for="password">Change Password:</label>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <button type="submit">Save Changes</button>
+    <button type="button" id="closeLoginSettings">Close</button>
+</form>
+</div>
+
+
+
+  
+</body>
+  <script>
+
+
+    /// POVERY BY AASIM ///
+    
+    const chatContainer = document.getElementById('chatContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const inputcontainer = document.getElementById('inputcontainer');
+    const body = document.getElementById('body');
+    const de = document.getElementById('de')
+    const loginSettings =document.getElementById('loginSettings');
+    const loginSettingsModal = document.getElementById('loginSettingsModal')
+    //soung
+    const vibe = document.getElementById('vibe');
+    const love = document.getElementById('love');
+    const brak =   document.getElementById('break');
+
+    //new fung
+    //ner
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsMenu = document.getElementById('settingsMenu');
+    const toggleDarkMode = document.getElementById('toggleDarkMode');
+    const showTimeDate = document.getElementById('showTimeDate');
+    const clearHistory = document.getElementById('clearHistory');
+    //colose button
+    document.getElementById('closeMenu').addEventListener('click', function() {
+        document.getElementById('settingsMenu').style.display = 'none';
+    });
+    
+    loginSettingsModal.addEventListener('click',() =>{
+      loginSettingsModal.style.display = loginSettingsModal.style.display === 'none' ? 'block' : 'none';
+    
+    });
+    
+    // Toggle settings menu visibility
+    settingsButton.addEventListener('click', () => {
+      settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // Toggle between dark and light mode
+    toggleDarkMode.addEventListener('click', () => {
+      const isDark = chatContainer.style.backgroundColor === 'rgb(28, 28, 28)';
+      if (isDark) {
+        chatContainer.style.backgroundColor = '#ffffff'; // Light mode
+        chatContainer.style.color = '#000000';
+        messageInput.style.backgroundColor = '#ffffff';
+        messageInput.style.color = '#000000';
+      } else {
+        chatContainer.style.backgroundColor = '#1c1c1c'; // Dark mode
+        chatContainer.style.color = '#ffffff';
+        messageInput.style.backgroundColor = '#121212';
+        messageInput.style.color = '#ffffff';
+      }
+    });
+    
+    
+    //setting account man
+    //loginSettings.innerHTML = ``
+    // Show current time and date
+    showTimeDate.addEventListener('click', () => {
+      const now = new Date();
+      const time = now.toLocaleTimeString();
+      const date = now.toLocaleDateString();
+      addMessage(`Current Time: ${time}\nCurrent Date: ${date}`, 'received');
+    });
+    
+    // Clear chat history
+    clearHistory.addEventListener('click', () => {
+      chatContainer.innerHTML = ''; // Clear all messages
+      addMessage('Chat history cleared.', 'received');
+    });
+    
+        // Function to add a message to the chat
+        // Function to add a message to the chat with a delete button
+    // Function to add a message to the chat with a delete button
+    function addMessage(text, type) {
+      const message = document.createElement('div');
+      message.classList.add('message', type);
+    
+      // Message content
+      const messageContent = document.createElement('span');
+      messageContent.textContent = text;
+    
+      // Delete button
+      const deleteButton = document.createElement('button');
+      deleteButton.classList.add('delete-button');
+    
+      // Add trash icon using Unicode
+     // Trash bin icon (Unicode)
+     deleteButton.innerHTML = '<i class="fas fa-trash"></i>'; // Font Awesome trash icon
+    
+      // Style the delete button
+      deleteButton.style.marginLeft = '10px';
+      deleteButton.style.backgroundColor = 'transparent';
+      deleteButton.style.color = '#ff4d4d';
+      deleteButton.style.border = 'none';
+      deleteButton.style.cursor = 'pointer';
+      deleteButton.style.fontSize = '16px';
+    
+      // Add hover effect (optional)
+      deleteButton.addEventListener('mouseover', () => {
+        deleteButton.style.color = '#cc0000';
+      });
+      
+      deleteButton.addEventListener('mouseout', () => {
+        deleteButton.style.color = '#ff4d4d';
+      });
+    
+      // Add event listener for delete functionality
+      deleteButton.addEventListener('click', () => {
+        chatContainer.removeChild(message);
+      });
+    
+      // Append content and button to the message
+      message.appendChild(messageContent);
+      message.appendChild(deleteButton);
+    
+      // Append message to the chat container
+      chatContainer.appendChild(message);
+      chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+    }
+    
+    
+      //  function addMessage(text, type) {
+       //   const message = document.createElement('div');
+        //  message.classList.add('message', type);
+      ///    message.textContent = text
+       //   chatContainer.appendChild(message);
+      //    chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+      //  }
+    
+        //time 
+    
+    // Handle send button click
+    sendButton.addEventListener('click', () => {
+      const messageText = messageInput.value.trim();
+      if (messageText !== '') {
+        addMessage(messageText, 'sent'); // Add sent message
+        messageInput.value = '';
+
+        // Simulate a reply
+        setTimeout(() => {
+          let response = '';
+
+          // Commands handling
+          if (messageText === 'help') {
+            response = `
+              Available Commands:
+              1.ai-
+what is your name,<br>
+i love you,
+how are you,
+countact number,
+hello,
+1+1 ,
+email id ,
+email ,
+instagram id,
+insta,
+about you,
+vibe song in tam,l-error-
+what is huma,
+best game in 2024,:
+best game-error,
+best pc game in 2,24
+best pc game-erro,-
+time,
+date,
+dark mode,
+dark,
+light mode,
+cls,
+bay,
+echo,
+git,
+github.
+            `;
+          } 
+
+          // ai hi
+          else if (messageText === 'ai') {
+              response = ` Welcom to Aasim Ai `
+          }
+
+          else if (messageText.toLowerCase()  === 'hi') {
+            response = `  Hi`
+          }
+
+          else if (messageText === 'i love you'){
+            response = ` I Love You Baby`
+          }
+
+          else if (messageText === 'how are you'){
+            response = `I am Fine`
+          }
+
+          else if (messageText === 'countact number'){
+             response = `
+            +91 98767**341 
+            Call Me
+            `
+          }
+
+          else if (messageText === 'hello') {
+            response = 'Hello sir How are you'
+          }
+
+          //NUMBERS
+          else if (messageText === '1+1') {
+             response = "2"
+          }
+
+          // email
+          else if (messageText === 'email id') {
+            response  = `Email: aasimabu123@gmail.com`
+          }
+
+          else if (messageText === 'email')
+          {
+            response = "Email: gameaasim931@game.com"
+          }
+
+          //instagram
+          else if (messageText === 'instagram id') {
+            response =`Instagram ID :Mr_Aasim`
+          }
+
+          else if (messageText === 'insta'){
+             response = `Instagram ID: Mr_Aasim`
+          }
+
+          //git
+          else if (messageText === 'git') {
+            response = "GitHub ID : aasim66"
+          }
+          
+          else if (messageText === 'github') {
+            response = "GitHub ID : aasim66"
+          }
+         
+          //--the--//
+          else if (messageText === 'about you') {
+            response = 'I am Aasim, a developer and innovator.';
+          }
+          
+          //hack area
+        else if (messageText === 'hack it') {
+          body.innerHTML=`
+          <br><br><br><br>
+          <br><br><br>
+          <br><br>
+          <br><br>
+          <br><br>
+          <br><br>
+          <center><h1>Hacking Ai <br> Aasim</h1>
+            <button onclick="refreshPage()" class="re">click hear</button>
+          </center>
+          <style>
+              h1{
+                  font-size: 30px;
+                  font: bold;
+              }
+              .re {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+              }
+              .re:hover {
+                background-color: #0056b3;
+              }
+          </style>
+          `
+        }
+
+        else if (messageText === 'dark web') {
+          body.innerHTML = `
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="glass-container">
+        <div class="login-box">
+            <br><br><br><br>
+            <br><br><br>
+            <br><br>
+            <br>
+            <br>
+            <center>
+            <form action="" method="POST" class="aa" >
+                <center class="aasd">
+                    <input type="text" id="username" name="username" required placeholder="Username">
+                    <br><br>
+                    <input type="password" id="password" name="password" required placeholder="Password">
+                    <br><br>
+                    <button type="submit" onclick="location.reload()">Login</button>
+                </center> 
+            </form>
+        </center>
+        </div>
+    </div>
+    <style>
+        .aa {
+            padding:  5px;
+            border-width: 3;
+            border-style: solid;
+            border-color: black;
+            position: center;
+            padding-left: 0px;
+            width: 400px;
+            height: 200px;
+            border-radius: 10px;
+            background: transparent;
+        }
+        #username{
+            padding-top: 0px;
+        }
+        .aasd {
+            padding: 10px;
+        }
+        input,button{
+            size:  10pc;
+            font-size: 30px;
+        }
+        button{
+            padding: 2px;
+            padding-left: 150px;
+            padding-right: 150px;
+        }
+        input{
+            border-color: rgb(0, 0, 0);
+            border-radius: 10px;
+            border-bottom: black solid 2px;
+            background: transparent;
+        }
+    </style>
+</body>
+</html>
+     `
+        }
+        else if (messageText === 'how to hack in wife password') {
+          response = `Open cmd Type: 'netsh wlan show profile' selet wife (next) Type:'netsh wlan show profile "your wife" key = clear  '`
+        }
+        else if (messageText === 'how to hack  wife password') {
+          response = `Open cmd Type: 'netsh wlan show profile' selet wife Type:'netsh wlan show profile "your wife" key = clear  '`
+        }
+
+        //viruns
+        else if (messageText === 'how to make a viruseofaasimmadeaasim.on.trv.tw/') {
+          response = 'visit us virus'
+        }
+         // Play sound based on message type
+         else if (messageText === 'vibe song  tamil') {
+            vibe.play();
+            vaib.innerHTML= `<audio id="vibe" src="love soung.mp4">aasim ai</audio>`
+             // Play receive sound
+         }
+
+         else if (messageText === 'love song in tamil') {
+           love.play();
+           love.innerHTML= `<audio id="vibe" src="love soung.mp4">aasim ai</audio>`
+         }
+
+         else if (messageText === 'break up song in tamil') {
+           brak.play();
+           brak.innerHTML = ` <audio id="break" src="brak up soung.mp4">aasim</audio>`
+         }
+         
+         //lock
+         else if (messageText === 'lock') {
+          body.innerHTML =`
+           <br><br><br><br>
+          <br><br><br>
+          <br><br>
+          <br><br>
+          <br><br>
+          <br><br>
+          <center><h1>Lock in aasim <br> Ai
+          </h1>
+            <button onclick="refreshPage()" class="re">click hear</button>
+          </center>
+          <style>
+              h1{
+                  font-size: 30px;
+                  font: bold;
+              }
+              .re {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+              }
+              .re:hover {
+                background-color: #0056b3;
+              }
+          </style>
+           `
+         }
+          // studey  //////////// studey ////////////
+          // what is //////////// what is ////////////
+          else if (messageText === 'what is human') {
+            response = "Human is very intelegent in ai world"
+          }
+
+          else if (messageText === 'what is pc') {
+            response = 'PC use this all data revecave in hacking also use in pc'
+          }
+
+          else if( messageText === 'what is html file') {
+            response = 'Hiper Text Multi Lanugh';
+            response = 'HTML file is use in web develment';
+          }
+
+          else if( messageText === 'what is html') {
+            response = 'Hiper Text Multi Lanugh';
+            response = 'HTML file is use in web develment';
+          }
+
+          else if (messageText === 'what is your name') {
+            response = ` My name  is aasim ai `
+          } 
+
+          else if (messageText === 'what is your age') {
+            response = 'My age is 14 years old'
+          }
+
+          else if (messageText === 'what is your father name') {
+            response = 'My father name is Aasim'
+          }
+
+          else if (messageText === 'what is money') {
+            response = 'Money is use full in human life'
+          }
+          
+          else if (messageText === 'what is best ai') {
+            response = 'The best ai in (Aasim ai,Open ai,ChatGpt)'
+          }
+
+          else if (messageText === 'what is rocket'){
+            response = `Rocket is the use for travel vehile at space`
+          }
+
+          else if (messageText === 'what is water'){
+            response = `Water is use as Human,Brids,ect..,`
+          }
+
+          else if (messageText === 'what is book'){
+            response = `Book is the use for study perpose`
+          }
+
+          else if (messageText === 'what is dna'){
+            response = `DNA is the (Error coad: #402)`
+          }
+
+          else if (messageText === 'what is note'){
+            response = `Book is the use for study perpose`
+          }
+
+          else if (messageText === 'what is maths'){
+            response = `Maths is use by add subrate also `
+          }
+
+          else if (messageText === 'what is food'){
+              response = `Food is the inpaartnt of all life`
+          }
+
+          else if (messageText === 'what is life'){
+              response = `Life is End `
+          }
+          
+          //game       /////////////game//////////
+          else if (messageText === 'best game in 2024'){ 
+            response = "Best game in 2024 Call of Dutey"
+          }
+
+          else if (messageText === 'best game '){
+            response = "Best game in 2024 Call of Dutey"
+          }
+
+          else if (messageText === 'best pc game in 2024'){
+            response = "Best game in 2024 Age of Ampear"
+          }
+
+          else if (messageText === 'best pc game '){
+            response = "Best game in 2024 Age of Ampear"
+          }
+
+          else if (messageText === 'best online game') {
+            response = `https://www.msn.com/en-in/play?cgfrom=cg_ntp_sd_cardtitle&ocid=msedgntp&cvid=ce8d1ecda15e4aed9cd07f94fdb61637&ei=42`
+          }
+          else if (messageText === 'best online games') {
+            response = `https://www.msn.com/en-in/play?cgfrom=cg_ntp_sd_cardtitle&ocid=msedgntp&cvid=ce8d1ecda15e4aed9cd07f94fdb61637&ei=42`
+          }
+          else if (messageText === 'best online game in free') {
+            response = `https://www.msn.com/en-in/play?cgfrom=cg_ntp_sd_cardtitle&ocid=msedgntp&cvid=ce8d1ecda15e4aed9cd07f94fdb61637&ei=42`
+          }
+
+          else if (messageText === 'goto game center') {
+            response = ` ${location.href="https://www.msn.com/en-in/play?cgfrom=cg_ntp_sd_cardtitle&ocid=msedgntp&cvid=02cc8ee3e0fb4fb792a5b9d1fcb4872a&ei=10"}`
+          }
+
+          else if (messageText === 'game center') {
+            response = ` ${location.href="https://www.msn.com/en-in/play?cgfrom=cg_ntp_sd_cardtitle&ocid=msedgntp&cvid=02cc8ee3e0fb4fb792a5b9d1fcb4872a&ei=10"}`
+          }
+
+          else if (messageText === 'time') {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            response = `${hours}:${minutes}:${seconds}`;
+          } 
+
+          //date
+          else if (messageText === 'date') {
+            const now = new Date();
+            // Get current date (Day, Month, Year)
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const year = now.getFullYear();
+            // Format the response as "DD/MM/YYYY HH:MM:SS"
+            response = `${day}/${month}/${year} `;
+          }        
+
+          // made aasim
+          else if (messageText === 'dark mode') {
+            chatContainer.style.backgroundColor = "#1c1c1c";
+            chatContainer.style.margin = "0";
+            chatContainer.style.border = "none";
+            chatContainer.style.color = "#ffffff"; // Corrected "with" to a valid color
+            
+            inputcontainer.style.backgroundColor = "#1c1c1c"
+            inputcontainer.style.color = "#ffffff"
+            //masee
+            messageInput.style.backgroundColor = "#121212";
+            messageInput.style.color = "#ffffff";
+            messageInput.style.border = "2px solid #333";
+        
+            response = `Changed to dark mode`;
+          }
+           else if (messageText === 'dark') {
+              chatContainer.style.backgroundColor = "#1c1c1c";
+              chatContainer.style.margin = "0";
+              chatContainer.style.border = "none";
+              chatContainer.style.color = "#ffffff"; // Corrected "with" to a valid color
+              
+              inputcontainer.style.backgroundColor = "#1c1c1c"
+              inputcontainer.style.color = "#ffffff"
+              //masee
+              messageInput.style.backgroundColor = "#121212";
+              messageInput.style.color = "#ffffff";
+              messageInput.style.border = "2px solid #333";
+          
+              response = `Changed to dark mode`;
+          }
+
+           else if (messageText === 'light mode') {
+            chatContainer.style.backgroundColor = "#ffffff"; // Set background to white
+              chatContainer.style.margin = "0";
+              chatContainer.style.border = "1px solid #ddd";
+              chatContainer.style.color = "#000000"; // Set text color to black
+          
+              // Input container
+              inputcontainer.style.backgroundColor = "#ffffff"; // Set background to white
+              inputcontainer.style.color = "#000000"; // Set text color to black
+          
+              // Message input
+              messageInput.style.backgroundColor = "#ffffff"; // Set input box background to white
+              messageInput.style.color = "#000000"; // Set input box text color to black
+              messageInput.style.border = "1px solid #ccc"; // Set a light border
+          
+              response = `Changed to white mode`
+          }
+
+          else if (messageText === 'blue') {
+              chatContainer.style.backgroundColor = "#E4E9F7";
+              chatContainer.style.margin = "0";
+              chatContainer.style.border = "none";
+              chatContainer.style.color = "#ffffff"; // Corrected "with" to a valid color
+              
+              inputcontainer.style.backgroundColor = "#11101d"
+              inputcontainer.style.color = "#ffffff"
+              //masee
+              messageInput.style.backgroundColor = "#1d1b31";
+              messageInput.style.color = "#ffffff";
+              messageInput.style.border = "2px solid #ffff";
+          
+              response = `Changed to dark mode`;
+          }          
+
+          else if (messageText === 'blue mode') {
+              chatContainer.style.backgroundColor = "#E4E9F7";
+              chatContainer.style.margin = "0";
+              chatContainer.style.border = "none";
+              chatContainer.style.color = "#ffffff"; // Corrected "with" to a valid color
+              
+              inputcontainer.style.backgroundColor = "#11101d"
+              inputcontainer.style.color = "#ffffff"
+              //masee
+              messageInput.style.backgroundColor = "#1d1b31";
+              messageInput.style.color = "#ffffff";
+              messageInput.style.border = "2px solid #ffff";
+          
+              response = `Changed to dark mode`;
+          }          
+
+          else if (messageText === 'cls'){
+            chatContainer.innerHTML = 'Its Made By aasim'; // Clears all chat messages
+            chatContainer.innerHTML = ''; 
+          }
+
+          else if (messageText === 'bay') {
+              response = "Bay sir"
+          }
+
+          else if (messageText === 'why') {
+            response = `why know`
+          }
+          
+          else if (messageText === 'i know'){
+            response = `You now`
+          }
+          else if (messageText === 'i no'){
+            response = `You now`
+          }
+          else if (messageText.startsWith('echo ')) {
+            response = messageText.slice(5); 
+            // Echo back the message
+          } 
+
+
+          //re fearse
+          else if (messageText === 'f5') {
+            response = `${location.reload()}`
+          }
+
+          else if (messageText === 'relode') {
+            response = `${location.reload()}`
+          }
+
+          else if (messageText === 'refarse') {
+            response = `${location.reload()}`
+          }
+
+          else if (messageText === 'run') {
+            response = `${location.reload()}`
+          }
+
+          //elsa eary
+          else {
+            response = `sorry I do not understarand in this message ${messageText}.`;
+          }
+
+
+      
+          addMessage(response, 'received');
+           // Add received message
+        }, 999); // Simulate a delay for response
+
+      }
+
+    });
+
+    // Allow pressing Enter to send the message
+    messageInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+
+    function refreshPage() {
+    var a = location.reload();
+  }
+  </script>
+</body>
+</html>
